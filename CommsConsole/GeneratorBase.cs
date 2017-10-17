@@ -8,10 +8,8 @@ namespace CommsConsole
     public class GeneratorBase
     {
         private StreamWriter sw;
-        protected String directoryName;
-        public GeneratorBase(String fileName, String sourceDirectoryName)
+        public GeneratorBase(String fileName)
         {
-            this.directoryName = sourceDirectoryName;
             sw = new StreamWriter(new FileStream(fileName, FileMode.Create));
         }
 

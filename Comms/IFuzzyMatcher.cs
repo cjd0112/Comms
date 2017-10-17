@@ -7,5 +7,7 @@ namespace Comms
     public interface IFuzzyMatcher : ICommsContract
     {
         String Select(String foo);
+        Int32 Select2(Int32 foo,String blah);
+        String Select(List<String> p);
     }
 }

@@ -1,6 +1,6 @@
 ﻿syntax="proto3";
 
-message Dog
+message Cat
 {
 	string Bark=1;
 	string Feet=2;
