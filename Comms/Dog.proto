@@ -1,0 +1,5 @@
+﻿message Dog
+{
+	required string Bark=1;
+	required string Feet=2;
+}
