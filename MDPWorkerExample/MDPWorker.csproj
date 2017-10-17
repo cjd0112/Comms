@@ -72,14 +72,15 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AsyncIO">
-      <HintPath>..\packages\AsyncIO.0.1.18.0\lib\net40\AsyncIO.dll</HintPath>
+    <Reference Include="AsyncIO, Version=0.1.25.0, Culture=neutral, PublicKeyToken=44a94435bd6f33f8, processorArchitecture=MSIL">
+      <HintPath>..\packages\AsyncIO.0.1.26.0\lib\net40\AsyncIO.dll</HintPath>
     </Reference>
-    <Reference Include="NetMQ">
-      <HintPath>..\packages\NetMQ.4.0.0.0-beta\lib\net40\NetMQ.dll</HintPath>
+    <Reference Include="NetMQ, Version=4.0.0.1, Culture=neutral, PublicKeyToken=a6decef4ddc58b3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\NetMQ.4.0.0.1\lib\net40\NetMQ.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.ServiceModel" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -107,7 +108,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="None.None.YearDayOfYear.Increment" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_UseUniversalClock="True" BuildVersion_AssemblyInfoFilename="Properties\AssemblyInfo.cs" />
+      <UserProperties BuildVersion_AssemblyInfoFilename="Properties\AssemblyInfo.cs" BuildVersion_UseUniversalClock="True" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_BuildVersioningStyle="None.None.YearDayOfYear.Increment" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

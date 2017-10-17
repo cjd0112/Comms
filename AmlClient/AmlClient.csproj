@@ -6,11 +6,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Google.Protobuf" Version="3.0.0-beta3" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="2.0.0" />
     <PackageReference Include="NetMQ" Version="4.0.0.1" />
-    <PackageReference Include="protobuf-net" Version="2.3.2" />
     <PackageReference Include="StructureMap" Version="4.5.2" />
   </ItemGroup>
 

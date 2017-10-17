@@ -20,12 +20,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="NetMQ">
-      <HintPath>..\packages\NetMQ.4.0.0.0-beta\lib\net40\NetMQ.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
     <None Update="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
