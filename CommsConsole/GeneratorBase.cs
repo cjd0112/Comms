@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Text;
 
 namespace CommsConsole
@@ -27,6 +29,20 @@ namespace CommsConsole
         {
             sw.Flush();
             sw.Dispose();
+        }
+
+        protected Tuple<string, string> GenerateSignatureParameter(ParameterInfo pi)
+        {
+            if (pi.ParameterType == typeof(String) || pi.ParameterType == typeof(Int32))
+            {
+                return new Tuple<string, string>(pi.ParameterType.Name, pi.Name);
+            }
+            else if (typeof(IList).IsAssignableFrom(pi.ParameterType))
+            {
+                return new Tuple<string, string>("List<" + pi.ParameterType.GenericTypeArguments[0].Name + ">", pi.Name);
+            }
+            return new Tuple<string, string>("", "");
+
         }
     }
 }

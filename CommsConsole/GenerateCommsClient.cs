@@ -48,15 +48,15 @@ using Shared;
 
 namespace Comms
 {
-    public class FuzzyMatcherClient : IFuzzyMatcher
+    public class _NAME_Client : I_NAME_
     {
         private IServiceClient client;
-        public FuzzyMatcherClient(IServiceClient client)
+        public _NAME_Client(IServiceClient client)
         {
             this.client = client;
         }
 
-        FUNCTIONS
+        _FUNCTIONS_
     }
 }";
 
@@ -66,12 +66,6 @@ namespace Comms
             sourceDirectoryName + "/" + ModuleFuncs.GetClassName(type) + "Client.cs")
         {
             this.type = type;
-
-            var z = new NetMQMessage();
-
-            List<String> z2 = new List<string>();
-
-            z2.Do(x => z.Append(x));
         }
 
         public void GenerateFile()
@@ -83,19 +77,13 @@ namespace Comms
 
                 
             }
-            O(outer.Replace("FUNCTIONS", methods.Aggregate("", (x, y) => x + "\n\n" + y)));
+            
+            O(outer.Replace("_NAME_", ModuleFuncs.GetClassName(type)).
+                Replace("_FUNCTIONS_", methods.Aggregate("", (x, y) => x + "\n\n" + y)));
 
             Close();
         }
 
-
-        /*
-            var z = new NetMQMessage();
-            z.Append("Select");
-            z.Append(foo);
-            var ret = client.Send(z);
-            return ret.First.ConvertToString();
-        */
 
         String GenerateMethod(MethodInfo method)
         {
@@ -133,21 +121,6 @@ namespace Comms
             return $"\t\t{access} {ret} {name}({parameters})\n";
         }
 
-
-        Tuple<string, string> GenerateSignatureParameter(ParameterInfo pi)
-        {
-            if (pi.ParameterType == typeof(String) || pi.ParameterType == typeof(Int32))
-            {
-                return new Tuple<string, string>(pi.ParameterType.Name, pi.Name);
-            }
-            else if (typeof(IList).IsAssignableFrom(pi.ParameterType))
-            {
-                return new Tuple<string, string>("List<" + pi.ParameterType.GenericTypeArguments[0].Name + ">",pi.Name);
-            }
-            return new Tuple<string, string>("", "");
-
-        }
-
         String GenerateParameter(ParameterInfo pi)
         {
             if (pi.ParameterType == typeof(String) || pi.ParameterType == typeof(Int32))
@@ -156,7 +129,7 @@ namespace Comms
             }
             else if (typeof(IList).IsAssignableFrom(pi.ParameterType))
             {
-                return $"{pi.Name}.Do(x => msg.Append(x))";
+                return $@"msg.Append({pi.Name}.Count);{pi.Name}.Do(x => msg.Append(x))";
             }
             return "";
         }

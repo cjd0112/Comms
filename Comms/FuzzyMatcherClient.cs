@@ -16,6 +16,7 @@ namespace Comms
         }
 
         
+
 		public String Select(String foo)
 		{
 			var msg = new NetMQMessage();
@@ -24,6 +25,7 @@ namespace Comms
 			var ret = client.Send(msg);
 			return ret.First.ConvertToString();
 		}
+
 		public Int32 Select2(Int32 foo,String blah)
 		{
 			var msg = new NetMQMessage();
@@ -33,11 +35,12 @@ namespace Comms
 			var ret = client.Send(msg);
 			return ret.First.ConvertToInt32();
 		}
-		public String Select(List<String> p)
+
+		public String Select3(List<String> p)
 		{
 			var msg = new NetMQMessage();
-			msg.Append("Select");
-			p.Do(x => msg.Append(x));
+			msg.Append("Select3");
+			msg.Append(p.Count);p.Do(x => msg.Append(x));
 			var ret = client.Send(msg);
 			return ret.First.ConvertToString();
 		}
