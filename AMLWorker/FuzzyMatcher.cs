@@ -1,20 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using NetMQ;
+using Comms;
 
 namespace AMLWorker
 {
-    public class FuzzyMatcher : Service
+    public class FuzzyMatcher : FuzzyMatcherServer
     {
-        public FuzzyMatcher(ServiceType parent, int bucketId) : base(parent, bucketId)
+        public FuzzyMatcher(IServiceServer server) : base(server)
         {
-
         }
 
-        protected override NetMQMessage ProcessRequest(NetMQMessage request)
+        public override string Select(string foo)
         {
-            throw new NotImplementedException();
+            return foo + "SELECT";
+        }
+
+        public override int Select2(int foo, string blah)
+        {
+            return 234;
+        }
+
+        public override string Select3(List<string> p)
+        {
+            return "blalalal";
         }
     }
 }

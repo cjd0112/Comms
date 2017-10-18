@@ -16,6 +16,8 @@ namespace CommsConsole
     {
         static void Main(string[] args2)
         {
+            var name = typeof(FuzzyMatcherServer).FullName;
+
             // update the google objects
             var z2 = Directory.GetCurrentDirectory();
             foreach (var c in Directory.EnumerateFiles("../Comms/","*.proto"))

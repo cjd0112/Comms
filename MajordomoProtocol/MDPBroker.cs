@@ -120,7 +120,7 @@ namespace MajordomoProtocol
             Socket = new RouterSocket ();
             m_services = new List<Service> ();
             m_knownWorkers = new List<Worker> ();
-            m_heartbeatInterval = TimeSpan.FromMilliseconds (10000); // otherwise the expiry would be 0(!)
+            m_heartbeatInterval = TimeSpan.FromMilliseconds (2500); // otherwise the expiry would be 0(!)
             HeartbeatLiveliness = 3;                    // so m_heartbeatExpiry = value * m_heartbeatInterval = 7.500 ms
             m_isBound = false;
         }
@@ -429,18 +429,31 @@ namespace MajordomoProtocol
                 var returnCode = MmiCode.Unknown;
                 var name = request.Last.ConvertToString ();
 
-                if (m_services.Exists (s => s.Name == name))
+                if (name.ToLower() == "list")
                 {
-                    var svc = m_services.Find (s => s.Name == name);
-
-                    returnCode = svc.DoWorkersExist () ? MmiCode.Ok : MmiCode.Pending;
+                    var lst = m_services.Select(x => x.Name).Aggregate("", (x, y) => x + y + ",");
+                    if (lst.EndsWith(","))
+                        lst = lst.Substring(0, lst.Length - 1);
+                    request.RemoveFrame(message.Last);
+                    request.Append(serviceName);
+                    request.Append(lst);
                 }
-                // set the return code to be the last frame in the message
-                var rc = new NetMQFrame (returnCode.ToString ());// [return code]
+                else
+                {
+                    if (m_services.Exists(s => s.Name == name))
+                    {
+                        var svc = m_services.Find(s => s.Name == name);
 
-                request.RemoveFrame (message.Last);             // [CLIENT ADR][e] -> [service name]
-                request.Append (serviceName);                   // [CLIENT ADR][e] <- ['mmi.service']
-                request.Append (rc);                            // [CLIENT ADR][e]['mmi.service'] <- [return code]
+                        returnCode = svc.DoWorkersExist() ? MmiCode.Ok : MmiCode.Pending;
+                    }
+                    // set the return code to be the last frame in the message
+                    var rc = new NetMQFrame(returnCode.ToString());// [return code]
+
+                    request.RemoveFrame(message.Last);             // [CLIENT ADR][e] -> [service name]
+                    request.Append(serviceName);                   // [CLIENT ADR][e] <- ['mmi.service']
+                    request.Append(rc);                            // [CLIENT ADR][e]['mmi.service'] <- [return code]
+                }
+
 
                 // remove client return envelope and insert
                 // protocol header and service name,
@@ -579,7 +592,8 @@ namespace MajordomoProtocol
                           ? m_services.Find (s => s.Name == serviceName)
                           : new Service (serviceName);
             // add service to the known services
-            m_services.Add (svc);
+            if (m_services.Exists(s=>s.Name == svc.Name) == false)
+                m_services.Add (svc);
 
             return svc;
         }

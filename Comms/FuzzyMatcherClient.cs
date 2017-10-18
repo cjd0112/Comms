@@ -13,6 +13,7 @@ namespace Comms
         public FuzzyMatcherClient(IServiceClient client)
         {
             this.client = client;
+            this.client.SetUnderlying(this);
         }
 
         

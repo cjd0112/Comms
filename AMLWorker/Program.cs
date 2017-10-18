@@ -44,6 +44,9 @@ namespace AMLWorker
             catch (Exception e)
             {
                 L.Exception(e);
+                Console.WriteLine(e.Message);
+                Console.ReadLine();
+
             }
         }
 

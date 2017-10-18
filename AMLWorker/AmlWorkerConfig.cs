@@ -11,6 +11,7 @@ namespace AMLWorker
             Properties = new Dictionary<string, object>();
         }
         public String Type { get; set; }
+        public String Interface { get; set; }
         public int BucketStart { get; set; }
         public int BucketCount { get; set; }
         public Dictionary<String,Object> Properties { get; set; }

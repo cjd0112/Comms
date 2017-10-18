@@ -1,6 +1,6 @@
 ﻿using System;
-using AMLClient;
 using AS.Logger;
+using Comms;
 using Logger;
 using Microsoft.Extensions.Configuration;
 using StructureMap;
@@ -38,17 +38,20 @@ namespace AmlClient
 
                 L.Trace("Initializing Dependencies");
 
-                var workers = config.Get<ClientActorConfig>();
+                For<IServiceClient>().Add<ServiceClient>();
 
-                For<ClientActors>().Use(workers.ClientActors);
-
-                For<IClient>().Use(() => new AmlClient());
+                For<IClientProxy>().Add<ClientFactory>();
 
                 Scan(x =>
                 {
                     x.TheCallingAssembly();
+                    x.AddAllTypesOf<IServiceClient>();
+                    x.Assembly("Comms");
                     x.SingleImplementationsOfInterface();
+                    x.AddAllTypesOf<ICommsContract>();
+                    x.AddAllTypesOf<IServiceClient>();
                 });
+
 
             }
         }

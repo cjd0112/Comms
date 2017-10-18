@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Transactions;
+using Comms;
 using StructureMap;
 
 namespace AMLWorker
@@ -20,24 +21,26 @@ namespace AMLWorker
             this.config = config;
             this.container = container;
 
-            var t = System.Type.GetType(config.Type);
-
         }
 
         public String GetServiceName(int bucket)
         {
-            return $"{Type}_{bucket}";
+            return $"{config.Interface}_{bucket}";
         }
 
         public void Run()
         {
             for (int i = config.BucketStart; i < config.BucketStart + config.BucketCount; i++)
             {
-                var q = container
-                    .With(typeof(ServiceType), this)
-                    .With(typeof(int), i)
-                    .GetInstance(System.Type.GetType(config.Type));
-                underlying.Add((Service)q);
+                var q = new Service(this,i);
+                underlying.Add(q as Service);
+
+                // create logic component
+                var logicType = System.Type.GetType(config.Type);
+                if (logicType == null)
+                    throw new Exception($"Could not create component of type - {config.Type} - are you using fully qualified name?");
+                var logic = container.With(typeof(IServiceServer), q).GetInstance(logicType);
+
                 underlying.Last().Run();
 
             }

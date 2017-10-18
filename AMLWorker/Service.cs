@@ -2,16 +2,17 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using Comms;
 using NetMQ;
 using MajordomoProtocol;
 
 namespace AMLWorker
 {
-    public abstract class Service
+    public class Service : IServiceServer
     {
         private ServiceType parent;
         private int bucketId;
-        protected Service(ServiceType parent, int bucketId)
+        public Service(ServiceType parent, int bucketId)
         {
             this.parent = parent;
             this.bucketId = bucketId;
@@ -44,12 +45,15 @@ namespace AMLWorker
                     if (ReferenceEquals(request, null))
                         break;
                     // echo the request
-                    reply = ProcessRequest(request);
+                    if (OnReceived != null)
+                        reply = OnReceived(request);
+                    else
+                        throw new Exception("OnReceived handler is null - is handler set?");
                 }
             });
             t.Start();
         }
 
-        protected abstract NetMQMessage ProcessRequest(NetMQMessage request);
+        public event Func<NetMQMessage, NetMQMessage> OnReceived;
     }
 }

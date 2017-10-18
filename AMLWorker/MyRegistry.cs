@@ -4,6 +4,7 @@ using System.Text;
 using System.IO;
 using System.Linq;
 using AS.Logger;
+using Comms;
 using Logger;
 using Microsoft.Extensions.Configuration;
 using StructureMap;
@@ -52,7 +53,7 @@ namespace AMLWorker
                 {
                     x.TheCallingAssembly();
                     x.SingleImplementationsOfInterface();
-                    x.AddAllTypesOf(typeof(Service));
+                    x.AddAllTypesOf<ICommsContract>();
                 });
 
             }

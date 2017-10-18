@@ -7,6 +7,8 @@ namespace Comms
 {
     public interface IServiceClient
     {
+        void SetUnderlying(ICommsContract contract);
         NetMQMessage Send(NetMQMessage request);
+
     }
 }

@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using AmlClient.AS.Application;
-using AMLClient;
+using Comms;
 using Logger;
 using MajordomoProtocol;
 using NetMQ;
@@ -12,6 +14,7 @@ namespace AmlClient
 {
     class Program
     {
+
         static void Main(string[] args)
         {
             try
@@ -21,24 +24,10 @@ namespace AmlClient
                 c = new Container(reg);
                 reg.For<IContainer>().Use(c);
 
+                var clientFactory = new ClientFactory(c);
 
-                var workers = c.GetInstance<ClientActors>();
-
-                var z = new MDPClientAsync("tcp://localhost:5555", new byte[] { (byte)'C', (byte)'1' });
-                z.ReplyReady += Z_ReplyReady;
-                z.LogInfoReady += Z_LogInfoReady;
-
-
-                for (byte i = 0; i < workers.NumNodes; i++)
-                {
-                    for (int q = 0; q < 100; q++)
-                    {
-                        var z2 = new NetMQMessage();
-                        z2.Append($"this is test message number {q} for {i}");
-                        z.Send($"AmlWorker_{i}", z2);
-                    }
-                }
-
+                clientFactory.Run();
+              
                 Console.ReadLine();
                 L.CloseLog();
 
@@ -50,20 +39,6 @@ namespace AmlClient
             }
         }
 
-        private static void Z_LogInfoReady(object sender, MDPCommons.MDPLogEventArgs e)
-        {
-            Console.WriteLine(e.Info);
-        }
-
-        private static void Z_ReplyReady(object sender, MDPCommons.MDPReplyEventArgs e)
-        {
-            var msg = e.Reply.Pop();           
-            Console.WriteLine("service name is: " + msg.ConvertToString());
-
-            msg = e.Reply.Pop();
-
-            Console.WriteLine("message is: " + msg.ConvertToString());
-
-        }
+      
     }
 }
