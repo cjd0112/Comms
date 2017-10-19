@@ -343,6 +343,8 @@ namespace MajordomoProtocol
             var workerId = sender.ConvertToString ();       // get the id of the worker sending the message
             var workerIsKnown = m_knownWorkers.Any (w => w.Id == workerId);
 
+
+
             switch (cmd)
             {
                 case MDPCommand.Ready:
@@ -394,6 +396,10 @@ namespace MajordomoProtocol
                         worker.Expiry = DateTime.UtcNow + m_heartbeatExpiry;
 
                         DebugLog ($"HEARTBEAT from {workerId} received.");
+                    }
+                    else
+                    {
+                        DebugLog($"HEARTBEAT found but worker is not known");
                     }
                     break;
                 default:

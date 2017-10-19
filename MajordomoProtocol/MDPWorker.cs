@@ -54,8 +54,8 @@ namespace MajordomoProtocol
         /// </summary>
         private MDPWorker ()
         {
-            HeartbeatDelay = TimeSpan.FromMilliseconds (2500);
-            ReconnectDelay = TimeSpan.FromMilliseconds (2500);
+            HeartbeatDelay = TimeSpan.FromMilliseconds (1000);
+            ReconnectDelay = TimeSpan.FromMilliseconds (1000);
             m_exit = false;
             m_connected = false;
         }
