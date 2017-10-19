@@ -15,7 +15,7 @@ namespace MajordomoProtocol
     /// </summary>
     public class MDPClientAsync : IMDPClientAsync
     {
-        private readonly TimeSpan m_defaultTimeOut = TimeSpan.FromMilliseconds(10000); // default value to be used to know if broker is not responding
+        private readonly TimeSpan m_defaultTimeOut = TimeSpan.FromMilliseconds(120000); // default value to be used to know if broker is not responding
         private readonly TimeSpan m_lingerTime = TimeSpan.FromMilliseconds(1);
         private readonly string m_mdpClient = MDPConstants.MDP_CLIENT_HEADER;
 

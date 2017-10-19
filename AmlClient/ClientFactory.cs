@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using System.Security.Authentication.ExtendedProtection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Comms;
+using Logger;
 using MajordomoProtocol;
 using NetMQ;
 using StructureMap;
@@ -21,6 +24,7 @@ namespace AmlClient
         ConcurrentQueue<Tuple<String,NetMQMessage>> myQueue = new ConcurrentQueue<Tuple<String,NetMQMessage>>();
 
         private Container container;
+        private AutoResetEvent initialEvent = new AutoResetEvent(false);
         public ClientFactory(Container c)
         {
             mainClient = new MDPClientAsync("tcp://localhost:5555", new byte[] { (byte)'C', (byte)'1' });
@@ -32,9 +36,21 @@ namespace AmlClient
 
             // get a list of the services that we support
             mainClient.Send("mmi.service", pp);
-
             this.container = c;
 
+            initialEvent.WaitOne();
+
+
+        }
+
+        public T GetClient<T>(int bucket) where T:ICommsContract
+        {
+            var str = typeof(T).Name + "_" + bucket;
+            if (serviceQueue.ContainsKey(str) == false)
+                throw new Exception($"Service with name - {0}");
+
+            var serviceClient = serviceQueue[str];
+            return (T) serviceClient.Underlying;
         }
 
         private void Z_LogInfoReady(object sender, MDPCommons.MDPLogEventArgs e)
@@ -68,8 +84,13 @@ namespace AmlClient
             {
                 try
                 {
-                    Console.WriteLine($"Loading service- {c}");
-                    var interfaceName = c.Substring(0, c.IndexOf("_") - 2);
+                    L.Trace($"Loading service- {c}");
+                    if (c.IndexOf("_") == -1)
+                        throw new Exception("Expected '_' in service name");
+
+                    var interfaceName = c.Substring(0, c.IndexOf("_"));
+
+                    L.Trace($"Extracted interface name - {interfaceName}");
 
                     Type interfaceType = null;
                     foreach (var g in Assembly.GetAssembly(typeof(ICommsContract)).GetExportedTypes())
@@ -80,17 +101,36 @@ namespace AmlClient
                         }
                     }
 
+                    if (interfaceType == null)
+                        throw new Exception(
+                            $"Couldn't find interface type inheriting from ICommsContract in Comms assembly with name - {interfaceName}");
+
                     var commsAssembly = Assembly.GetAssembly(typeof(ICommsContract));
 
                     var str = $"Comms.{interfaceName.Substring(1)}Client,{commsAssembly.FullName}";
 
+                    L.Trace($"Trying to create client type - {str}");
+
                     var clientType = System.Type.GetType(str);
 
-                    serviceQueue[c] = container.With(typeof(string), c).With(typeof(IClientProxy), this).GetInstance<ServiceClient>();
+                    if (clientType == null)
+                        throw new Exception($"Couldn't create client type with name - {str}");
+
+                    var serviceClient = container.With(typeof(string), c).With(typeof(IClientProxy), this).GetInstance<ServiceClient>();
+
+                    if (serviceClient == null)
+                        throw new Exception($"Couldn't create service client");
+
+                    serviceQueue[c] = serviceClient;
 
                     // hook up the underlying
 
-                    container.With(typeof(IServiceClient), serviceQueue[c]).GetInstance(clientType);
+                    var clientObj = container.With(typeof(IServiceClient), serviceQueue[c]).GetInstance(clientType);
+
+                    if (clientObj == null)
+                        throw new Exception($"Couldn't create client obj");
+
+                    L.Trace($"Created client obj with type - {clientType}");
 
 
                 }
@@ -107,7 +147,7 @@ namespace AmlClient
 
         private bool finished = false;
 
-        public void Run()
+        void Run()
         {
             var t = new Task(() =>
             {
@@ -122,6 +162,8 @@ namespace AmlClient
                 }
             });
             t.Start();
+
+            initialEvent.Set();
 
         }
 

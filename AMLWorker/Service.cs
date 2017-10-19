@@ -26,7 +26,6 @@ namespace AMLWorker
                 var g = new MDPWorker("tcp://localhost:5555", parent.GetServiceName(bucketId),
                                       new byte[] { (byte)'W', (byte)(bucketId+'A') });
 
-                g.HeartbeatDelay = TimeSpan.FromMilliseconds(10000);
                 // logging info to be displayed on screen
                 g.LogInfoReady += (s, e) => Console.WriteLine($"{e.Info}", e.Info);
 

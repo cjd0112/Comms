@@ -14,12 +14,11 @@ namespace MajordomoProtocol
         // Majordomo protocol header
         private readonly string m_mdpWorker = MDPConstants.MDP_WORKER_HEADER;
 
-        private const int _heartbeat_liveliness = 3;// indicates the remaining "live" for the worker
+        private const int _heartbeat_liveliness = 5;// indicates the remaining "live" for the worker
 
         private readonly string m_brokerAddress;    // the broker address to connect to
         private readonly string m_serviceName;      // the name of the service the worker offers
         private NetMQSocket m_worker;               // the worker socket itself -MDP requires to use DEALER
-        private DateTime m_heartbeatAt;             // when to send HEARTBEAT
         private int m_liveliness;                   // how many attempts are left
         private int m_expectReply;                  // will be 0 at start
         private NetMQFrame m_returnIdentity;        // the return identity if any
@@ -54,8 +53,8 @@ namespace MajordomoProtocol
         /// </summary>
         private MDPWorker ()
         {
-            HeartbeatDelay = TimeSpan.FromMilliseconds (1000);
-            ReconnectDelay = TimeSpan.FromMilliseconds (1000);
+            HeartbeatDelay = TimeSpan.FromMilliseconds (2500);
+            ReconnectDelay = TimeSpan.FromMilliseconds (2500);
             m_exit = false;
             m_connected = false;
         }
@@ -164,13 +163,8 @@ namespace MajordomoProtocol
                         Connect ();
                     }
 
-                    // if it is time to send a heartbeat to broker
-                    if (DateTime.UtcNow >= m_heartbeatAt)
-                    {
-                        Send (MDPCommand.Heartbeat, null, null);
+                    Send (MDPCommand.Heartbeat, null, null);
                         // set new point in time for sending the next heartbeat
-                        m_heartbeatAt = DateTime.UtcNow + HeartbeatDelay;
-                    }
                 }
             }
 
@@ -311,8 +305,6 @@ namespace MajordomoProtocol
             Send (MDPCommand.Ready, m_serviceName, null);
             // reset liveliness to active broker
             m_liveliness = _heartbeat_liveliness;
-            // set point in time for next heatbeat
-            m_heartbeatAt = DateTime.UtcNow + HeartbeatDelay;
         }
 
         /// <summary>

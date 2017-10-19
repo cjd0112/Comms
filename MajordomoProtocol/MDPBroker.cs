@@ -121,7 +121,7 @@ namespace MajordomoProtocol
             m_services = new List<Service> ();
             m_knownWorkers = new List<Worker> ();
             m_heartbeatInterval = TimeSpan.FromMilliseconds (2500); // otherwise the expiry would be 0(!)
-            HeartbeatLiveliness = 3;                    // so m_heartbeatExpiry = value * m_heartbeatInterval = 7.500 ms
+            HeartbeatLiveliness = 5;                    // so m_heartbeatExpiry = value * m_heartbeatInterval = 7.500 ms
             m_isBound = false;
         }
 
@@ -343,8 +343,6 @@ namespace MajordomoProtocol
             var workerId = sender.ConvertToString ();       // get the id of the worker sending the message
             var workerIsKnown = m_knownWorkers.Any (w => w.Id == workerId);
 
-
-
             switch (cmd)
             {
                 case MDPCommand.Ready:
@@ -557,6 +555,7 @@ namespace MajordomoProtocol
                 service.DeleteWorker (worker);
 
                 DebugLog ($"removed worker {worker.Id} from service {service.Name}");
+
             }
 
             m_knownWorkers.Remove (worker);

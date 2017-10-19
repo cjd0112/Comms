@@ -25,9 +25,19 @@ namespace AmlClient
                 reg.For<IContainer>().Use(c);
 
                 var clientFactory = new ClientFactory(c);
+                
 
-                clientFactory.Run();
-              
+                var z = clientFactory.GetClient<IFuzzyMatcher>(0);
+
+
+                for (int i = 0; i < 1000; i++)
+                {
+                    var response = z.Select("this is my select test string");
+
+                    Console.WriteLine(response);
+
+                }
+
                 Console.ReadLine();
                 L.CloseLog();
 
