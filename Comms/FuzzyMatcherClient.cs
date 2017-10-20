@@ -1,7 +1,9 @@
    
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.InteropServices;
+using Google.Protobuf;
 using NetMQ;
 using Shared;
 
@@ -13,7 +15,6 @@ namespace Comms
         public FuzzyMatcherClient(IServiceClient client)
         {
             this.client = client;
-            this.client.SetUnderlying(this);
         }
 
         
@@ -44,6 +45,19 @@ namespace Comms
 			msg.Append(p.Count);p.Do(x => msg.Append(x));
 			var ret = client.Send(msg);
 			return ret.First.ConvertToString();
+		}
+
+		public Boolean AddEntry(FuzzyWordEntries entries)
+		{
+			var msg = new NetMQMessage();
+			msg.Append("AddEntry");
+
+            byte[] buffer = new byte[entries.CalculateSize()];
+		    var m = new MemoryStream(buffer);
+		    entries.WriteTo(new CodedOutputStream(m));
+            msg.Append(buffer);
+			var ret = client.Send(msg);
+		    return ret.First.ConvertToInt32() !=0;
 		}
     }
 }

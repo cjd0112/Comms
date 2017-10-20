@@ -50,8 +50,7 @@ namespace Comms
                     }
 					ret.Append(Select3(p));
                     break;
-                }
-                default:
+                }                default:
                     throw new Exception($"Unexpected selector - {selector}");
             }
             return ret;
@@ -63,6 +62,8 @@ namespace Comms
 		public abstract Int32 Select2(Int32 foo,String blah);
 
 		public abstract String Select3(List<String> p);
+
+		public abstract Boolean AddEntry(FuzzyWordEntries entries);
 
     }
 }

@@ -3,7 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Reflection.PortableExecutable;
 using System.Text;
+using Google.Protobuf;
 
 namespace CommsConsole
 {
@@ -33,7 +35,7 @@ namespace CommsConsole
 
         protected Tuple<string, string> GenerateSignatureParameter(ParameterInfo pi)
         {
-            if (pi.ParameterType == typeof(String) || pi.ParameterType == typeof(Int32))
+            if (pi.ParameterType == typeof(String) || pi.ParameterType == typeof(Int32) || pi.ParameterType == typeof(Int64))
             {
                 return new Tuple<string, string>(pi.ParameterType.Name, pi.Name);
             }
@@ -41,7 +43,11 @@ namespace CommsConsole
             {
                 return new Tuple<string, string>("List<" + pi.ParameterType.GenericTypeArguments[0].Name + ">", pi.Name);
             }
-            return new Tuple<string, string>("", "");
+            else if (typeof(IMessage).IsAssignableFrom(pi.ParameterType))
+            {
+                return new Tuple<string, string>(pi.ParameterType.Name,pi.Name);
+            }
+            throw new Exception($"Unsupported parameter type -{pi.ParameterType.Name} for {pi.Name}");
 
         }
     }

@@ -1,7 +1,0 @@
-﻿syntax="proto3";
-
-message Dog
-{
-	string Bark=1;
-	string Feet=2;
-}

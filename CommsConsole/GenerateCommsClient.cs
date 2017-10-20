@@ -131,6 +131,7 @@ namespace Comms
             {
                 return $@"msg.Append({pi.Name}.Count);{pi.Name}.Do(x => msg.Append(x))";
             }
+
             return "";
         }
 

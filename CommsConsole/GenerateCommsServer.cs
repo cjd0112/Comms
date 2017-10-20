@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
+using Google.Protobuf;
 using NetMQ;
 
 namespace CommsConsole
@@ -137,6 +138,13 @@ var s = $@"               case ""{method.Name}"":
                         {c.Name}.Add(request.Pop().ConvertToString());
                     }}
 ";
+                    }
+                    else if (typeof(IMessage).IsAssignableFrom(c.ParameterType))
+                    {
+                        s += $@"
+                        var {c.Name} = Helper.UnpackMessageList<{c.ParameterType}>(request,(buffer)=>{
+                                c.ParameterType
+                            }.Parser.ParseFrom(buffer));";
                     }
                 }
 
