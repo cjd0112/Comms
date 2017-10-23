@@ -4,7 +4,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Comms;
 using NetMQ;
-using MajordomoProtocol;
 
 namespace AMLWorker
 {
@@ -12,10 +11,12 @@ namespace AMLWorker
     {
         private ServiceType parent;
         private int bucketId;
-        public Service(ServiceType parent, int bucketId)
+        private ServiceConfig serviceConfig;
+        public Service(ServiceType parent, ServiceConfig serviceConfig, int bucketId)
         {
             this.parent = parent;
             this.bucketId = bucketId;
+            this.serviceConfig = serviceConfig;
         }
 
         public void Run()
@@ -23,7 +24,7 @@ namespace AMLWorker
             var t = new Task(() =>
             {
 
-                var g = new MDPWorker("tcp://localhost:5555", parent.GetServiceName(bucketId),
+                var g = new MajordomoProtocol.MDPWorker("tcp://localhost:5555", parent.GetServiceName(bucketId),
                                       new byte[] { (byte)'W', (byte)(bucketId+'A') });
 
                 // logging info to be displayed on screen
@@ -52,6 +53,15 @@ namespace AMLWorker
             });
             t.Start();
         }
+
+        public object GetConfigProperty(string key)
+        {
+            if (serviceConfig.Properties.ContainsKey(key) == false)
+                throw new Exception($"Service Config does not contain key - {key}");
+            return serviceConfig.Properties[key];
+        }
+
+        public int BucketId => bucketId;
 
         public event Func<NetMQMessage, NetMQMessage> OnReceived;
     }

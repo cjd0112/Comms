@@ -32,7 +32,7 @@ namespace AMLWorker
         {
             for (int i = config.BucketStart; i < config.BucketStart + config.BucketCount; i++)
             {
-                var q = new Service(this,i);
+                var q = new Service(this,config,i);
                 underlying.Add(q as Service);
 
                 // create logic component

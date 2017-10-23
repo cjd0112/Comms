@@ -21,13 +21,11 @@ public static partial class FuzzyWordEntryReflection {
     byte[] descriptorData = global::System.Convert.FromBase64String(
         string.Concat(
           "ChRGdXp6eVdvcmRFbnRyeS5wcm90byIvCg5GdXp6eVdvcmRFbnRyeRIOCgZQ",
-          "aHJhc2UYASABKAkSDQoFRG9jSWQYAiABKAMiMgoQRnV6enlXb3JkRW50cmll",
-          "cxIeCgVFbnRyeRgBIAMoCzIPLkZ1enp5V29yZEVudHJ5YgZwcm90bzM="));
+          "aHJhc2UYASABKAkSDQoFRG9jSWQYAiABKANiBnByb3RvMw=="));
     descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
         new pbr::FileDescriptor[] { },
         new pbr::GeneratedClrTypeInfo(null, new pbr::GeneratedClrTypeInfo[] {
-          new pbr::GeneratedClrTypeInfo(typeof(global::FuzzyWordEntry), global::FuzzyWordEntry.Parser, new[]{ "Phrase", "DocId" }, null, null, null),
-          new pbr::GeneratedClrTypeInfo(typeof(global::FuzzyWordEntries), global::FuzzyWordEntries.Parser, new[]{ "Entry" }, null, null, null)
+          new pbr::GeneratedClrTypeInfo(typeof(global::FuzzyWordEntry), global::FuzzyWordEntry.Parser, new[]{ "Phrase", "DocId" }, null, null, null)
         }));
   }
   #endregion
@@ -171,115 +169,6 @@ public sealed partial class FuzzyWordEntry : pb::IMessage<FuzzyWordEntry> {
         }
         case 16: {
           DocId = input.ReadInt64();
-          break;
-        }
-      }
-    }
-  }
-
-}
-
-public sealed partial class FuzzyWordEntries : pb::IMessage<FuzzyWordEntries> {
-  private static readonly pb::MessageParser<FuzzyWordEntries> _parser = new pb::MessageParser<FuzzyWordEntries>(() => new FuzzyWordEntries());
-  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-  public static pb::MessageParser<FuzzyWordEntries> Parser { get { return _parser; } }
-
-  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-  public static pbr::MessageDescriptor Descriptor {
-    get { return global::FuzzyWordEntryReflection.Descriptor.MessageTypes[1]; }
-  }
-
-  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-  pbr::MessageDescriptor pb::IMessage.Descriptor {
-    get { return Descriptor; }
-  }
-
-  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-  public FuzzyWordEntries() {
-    OnConstruction();
-  }
-
-  partial void OnConstruction();
-
-  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-  public FuzzyWordEntries(FuzzyWordEntries other) : this() {
-    entry_ = other.entry_.Clone();
-  }
-
-  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-  public FuzzyWordEntries Clone() {
-    return new FuzzyWordEntries(this);
-  }
-
-  /// <summary>Field number for the "Entry" field.</summary>
-  public const int EntryFieldNumber = 1;
-  private static readonly pb::FieldCodec<global::FuzzyWordEntry> _repeated_entry_codec
-      = pb::FieldCodec.ForMessage(10, global::FuzzyWordEntry.Parser);
-  private readonly pbc::RepeatedField<global::FuzzyWordEntry> entry_ = new pbc::RepeatedField<global::FuzzyWordEntry>();
-  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-  public pbc::RepeatedField<global::FuzzyWordEntry> Entry {
-    get { return entry_; }
-  }
-
-  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-  public override bool Equals(object other) {
-    return Equals(other as FuzzyWordEntries);
-  }
-
-  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-  public bool Equals(FuzzyWordEntries other) {
-    if (ReferenceEquals(other, null)) {
-      return false;
-    }
-    if (ReferenceEquals(other, this)) {
-      return true;
-    }
-    if(!entry_.Equals(other.entry_)) return false;
-    return true;
-  }
-
-  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-  public override int GetHashCode() {
-    int hash = 1;
-    hash ^= entry_.GetHashCode();
-    return hash;
-  }
-
-  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-  public override string ToString() {
-    return pb::JsonFormatter.ToDiagnosticString(this);
-  }
-
-  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-  public void WriteTo(pb::CodedOutputStream output) {
-    entry_.WriteTo(output, _repeated_entry_codec);
-  }
-
-  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-  public int CalculateSize() {
-    int size = 0;
-    size += entry_.CalculateSize(_repeated_entry_codec);
-    return size;
-  }
-
-  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-  public void MergeFrom(FuzzyWordEntries other) {
-    if (other == null) {
-      return;
-    }
-    entry_.Add(other.entry_);
-  }
-
-  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-  public void MergeFrom(pb::CodedInputStream input) {
-    uint tag;
-    while ((tag = input.ReadTag()) != 0) {
-      switch(tag) {
-        default:
-          input.SkipLastField();
-          break;
-        case 10: {
-          entry_.AddEntriesFrom(input, _repeated_entry_codec);
           break;
         }
       }

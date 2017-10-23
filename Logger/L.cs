@@ -193,7 +193,7 @@ namespace Logger
                 CreateTextWriter();
 
             }
-            catch (Exception e)
+            catch (Exception )
             {
             }
 

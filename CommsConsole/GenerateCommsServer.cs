@@ -67,9 +67,9 @@ namespace Comms
                 handlers.Add(GenerateHandler(method));
             }
 
-            O(outer.Replace("_NAME_", ModuleFuncs.GetClassName(type)).
-                Replace("_HANDLERS_",handlers.Aggregate("",(x,y)=>x+"\n"+y)).
-                Replace("_FUNCTIONS_", methods.Aggregate("", (x, y) => x + "\n" + y)));
+            O(outer.Replace("_NAME_", ModuleFuncs.GetClassName(type))
+                .Replace("_HANDLERS_", handlers.Aggregate("", (x, y) => x + "\n" + y))
+                .Replace("_FUNCTIONS_", methods.Aggregate("", (x, y) => x + "\n" + y)));
 
             Close();
         }
@@ -93,11 +93,14 @@ namespace Comms
         {
 var s = $@"               case ""{method.Name}"":
                 {{
-                    SUBHANDLERret.Append({GenerateCallingStub(method)});
+                    SUBHANDLER
+                    var methodResult={GenerateCallingStub(method)};
+                    ADDMETHODRESULTTORET;
                     break;
                 }}";
 
             s = s.Replace("SUBHANDLER", GenerateSubHandler(method));
+            s = s.Replace("ADDMETHODRESULTTORET", GenerateAddMethodResultToRet(method));
             return s;
         }
 
@@ -119,37 +122,61 @@ var s = $@"               case ""{method.Name}"":
             String s = "";
             foreach (var c in method.GetParameters())
             {
-                s += $"var {c.Name}Frame = request.Pop();\n";
                 if (c.ParameterType == typeof(String))
-                    s += $"\t\t\t\t\tvar {c.Name} = {c.Name}Frame.ConvertToString();\n";
+                    s += $"var {c.Name} = request.Pop().ConvertToString();\n";
                 else if (c.ParameterType == typeof(Int32))
-                    s += $"\t\t\t\t\tvar {c.Name} = {c.Name}Frame.ConvertToInt32();\n";
+                    s += $"var {c.Name} = request.Pop().ConvertToInt32();\n";
                 else if (c.ParameterType == typeof(Int64))
-                    s += $"\t\t\t\t\tvar {c.Name} = {c.Name}Frame.ConvertToInt64();\n";
+                    s += $"var {c.Name} = request.Pop().ConvertToInt64();\n";
                 else if (typeof(IList).IsAssignableFrom(c.ParameterType))
                 {
-                    if (c.ParameterType.GenericTypeArguments[0] == typeof(String))
+                    var paramType = c.ParameterType.GenericTypeArguments[0];
+                    if (paramType == typeof(String))
                     {
  s += $@"                
-                    var {c.Name} = new List<String>();
-                    var cnt = request.Pop().ConvertToInt32();
-                    while (cnt-->0)
-                    {{
-                        {c.Name}.Add(request.Pop().ConvertToString());
-                    }}
+                    var {c.Name} = Helpers.UnpackMessageListString(request);
 ";
                     }
-                    else if (typeof(IMessage).IsAssignableFrom(c.ParameterType))
+                    else if (paramType == typeof(Int32))
+                    {
+                        s += $@"                
+                    var {c.Name} = Helpers.UnpackMessageListInt32(request);
+";
+                    }
+                    else if (paramType == typeof(Int64))
+                    {
+                        s += $@"                
+                    var {c.Name} = Helpers.UnpackMessageListInt64(request);
+";
+                    }
+                    else if (typeof(IMessage).IsAssignableFrom(paramType))
                     {
                         s += $@"
-                        var {c.Name} = Helper.UnpackMessageList<{c.ParameterType}>(request,(buffer)=>{
-                                c.ParameterType
-                            }.Parser.ParseFrom(buffer));";
+                        var {c.Name} = Helpers.UnpackMessageList<{paramType}>(request,{paramType}.Parser.ParseFrom);";
                     }
                 }
 
                 s += "\t\t\t\t\t";
 
+            }
+            return s;
+        }
+
+        String GenerateAddMethodResultToRet(MethodInfo mi)
+        {
+            String s = "";
+            if (mi.ReturnType == typeof(String) || mi.ReturnType == typeof(Int32) || mi.ReturnType == typeof(Int64))
+            {
+                s = "ret.Append(methodResult)";
+            }
+            else if (mi.ReturnType == typeof(bool))
+            {
+                s = "ret.Append(Convert.ToInt32(methodResult))";
+            }
+            
+            else
+            {
+                throw new Exception($"Unexpected return type for {mi.Name} - {mi.ReturnType.Name}");
             }
             return s;
         }

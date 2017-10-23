@@ -23,6 +23,8 @@ namespace AMLWorker
                 c = new Container(reg);
                 reg.For<IContainer>().Use(c);
 
+
+
                 c.GetInstance<Node>().Run();
 
                 /*

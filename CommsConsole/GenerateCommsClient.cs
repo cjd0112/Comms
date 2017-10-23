@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using Google.Protobuf;
 using NetMQ;
 using Shared;
 
@@ -129,7 +130,24 @@ namespace Comms
             }
             else if (typeof(IList).IsAssignableFrom(pi.ParameterType))
             {
-                return $@"msg.Append({pi.Name}.Count);{pi.Name}.Do(x => msg.Append(x))";
+                if (pi.ParameterType.GenericTypeArguments[0] == typeof(string))
+                {
+                    return $"Helpers.PackMessageListString(msg,{pi.Name})";
+                }
+                else if (pi.ParameterType.GenericTypeArguments[0] == typeof(Int32))
+                {
+                    return $"Helpers.PackMessageListInt32(msg,{pi.Name})";
+                }
+                else if (pi.ParameterType.GenericTypeArguments[0] == typeof(Int64))
+                {
+                    return $"Helpers.PackMessageListInt64(msg,{pi.Name})";
+                }
+                else if (typeof(IMessage).IsAssignableFrom(pi.ParameterType.GenericTypeArguments[0]))
+                {
+                    return $"Helpers.PackMessageList<{pi.ParameterType.GenericTypeArguments[0].Name}>(msg,{pi.Name})";
+                }
+
+
             }
 
             return "";
@@ -145,6 +163,10 @@ namespace Comms
             else if (returnType == typeof(Int32))
             {
                 return $"ret.First.ConvertToInt32()";
+            }
+            else if (returnType == typeof(Boolean))
+            {
+                return $"ret.First.ConvertToInt32() >0 ? true:false";
             }
             return "";
         }
