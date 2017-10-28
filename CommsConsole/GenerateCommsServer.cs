@@ -78,7 +78,15 @@ namespace Comms
         String GenerateMethod(MethodInfo method)
         {
             var access = "public abstract";
-            var ret = method.ReturnType.Name;
+            var ret = "";
+            if (typeof(IList).IsAssignableFrom(method.ReturnType))
+            {
+                ret = $"List<{method.ReturnType.GenericTypeArguments[0].Name}>";
+            }
+            else
+            {
+                ret = method.ReturnType.Name;
+            }
             var name = method.Name;
             var parameters = method.GetParameters().Select(GenerateSignatureParameter)
                 .Select(x => x.Item1 + " " + x.Item2).Aggregate("", (x, y) => x + y + ",");
@@ -152,7 +160,7 @@ var s = $@"               case ""{method.Name}"":
                     else if (typeof(IMessage).IsAssignableFrom(paramType))
                     {
                         s += $@"
-                        var {c.Name} = Helpers.UnpackMessageList<{paramType}>(request,{paramType}.Parser.ParseFrom);";
+                        var {c.Name} = Helpers.UnpackMessageList<{paramType}>(request,{paramType}.Parser.ParseDelimitedFrom);";
                     }
                 }
 
@@ -173,7 +181,14 @@ var s = $@"               case ""{method.Name}"":
             {
                 s = "ret.Append(Convert.ToInt32(methodResult))";
             }
-            
+            else if (typeof(IList).IsAssignableFrom(mi.ReturnType))
+            {
+                if (typeof(IMessage).IsAssignableFrom(mi.ReturnType.GenericTypeArguments[0]))
+                {
+                    var t = mi.ReturnType.GenericTypeArguments[0];
+                    s = $"Helpers.PackMessageList<{t.Name}>(ret,methodResult);";
+                }
+            }
             else
             {
                 throw new Exception($"Unexpected return type for {mi.Name} - {mi.ReturnType.Name}");

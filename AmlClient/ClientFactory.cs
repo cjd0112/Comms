@@ -47,9 +47,13 @@ namespace AmlClient
         {
             var str = typeof(T).Name + "_" + bucket;
             if (serviceQueue.ContainsKey(str) == false)
-                throw new Exception($"Service with name - {0}");
+                throw new Exception($"Service with name - {str}");
 
             var serviceClient = serviceQueue[str];
+
+            if (serviceClient.Underlying == null)
+                throw new Exception($"Underlying for service - {str} is null ...");
+
             return (T) serviceClient.Underlying;
         }
 

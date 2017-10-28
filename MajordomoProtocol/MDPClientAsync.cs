@@ -144,7 +144,7 @@ namespace MajordomoProtocol
             message.Push(m_mdpClient);
             message.PushEmptyFrame();
 
-            Log($"[CLIENT INFO] sending {message} to service {serviceName}");
+            Log($"[CLIENT INFO] sending message to service {serviceName}");
 
             m_client.SendMultipartMessage(message); // Or TrySend!? ErrorHandling!?
         }
@@ -236,7 +236,7 @@ namespace MajordomoProtocol
 
                 m_timer.EnableAndReset(); // reset timeout timer because a message was received
 
-                Log($"[CLIENT INFO] received the reply {reply}");
+                Log($"[CLIENT INFO] received a reply with '{reply.FrameCount}' frames");
 
                 ExtractFrames(reply);
             }

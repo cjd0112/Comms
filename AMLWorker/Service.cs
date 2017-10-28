@@ -28,7 +28,7 @@ namespace AMLWorker
                                       new byte[] { (byte)'W', (byte)(bucketId+'A') });
 
                 // logging info to be displayed on screen
-                g.LogInfoReady += (s, e) => Console.WriteLine($"{e.Info}", e.Info);
+                g.LogInfoReady += (s, e) => Console.WriteLine($"{e.Info}");
 
                 // there is no initial reply
                 NetMQMessage reply = null;

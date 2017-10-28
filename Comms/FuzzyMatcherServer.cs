@@ -24,9 +24,19 @@ namespace Comms
             {
                case "AddEntry":
                 {
-                    var entries = Helpers.UnpackMessageList<FuzzyWordEntry>(request,FuzzyWordEntry.Parser.ParseFrom);					
+                    
+                        var entries = Helpers.UnpackMessageList<FuzzyWordEntry>(request,FuzzyWordEntry.Parser.ParseDelimitedFrom);					
                     var methodResult=AddEntry(entries);
                     ret.Append(Convert.ToInt32(methodResult));
+                    break;
+                }
+               case "FuzzyQuery":
+                {
+                                    
+                    var phrases = Helpers.UnpackMessageListString(request);
+					
+                    var methodResult=FuzzyQuery(phrases);
+                    Helpers.PackMessageList<FuzzyQueryResponse>(ret,methodResult);;
                     break;
                 }
                 default:
@@ -37,6 +47,8 @@ namespace Comms
 
         
 		public abstract Boolean AddEntry(List<FuzzyWordEntry> entries);
+
+		public abstract List<FuzzyQueryResponse> FuzzyQuery(List<String> phrases);
 
     }
 }

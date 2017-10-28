@@ -13,6 +13,7 @@ namespace Comms
         public FuzzyMatcherClient(IServiceClient client)
         {
             this.client = client;
+            this.client.SetUnderlying(this);
         }
 
         
@@ -24,6 +25,15 @@ namespace Comms
 			Helpers.PackMessageList<FuzzyWordEntry>(msg,entries);
 			var ret = client.Send(msg);
 			return ret.First.ConvertToInt32() >0 ? true:false;
+		}
+
+		public List<FuzzyQueryResponse> FuzzyQuery(List<String> phrases)
+		{
+			var msg = new NetMQMessage();
+			msg.Append("FuzzyQuery");
+			Helpers.PackMessageListString(msg,phrases);
+			var ret = client.Send(msg);
+			return Helpers.UnpackMessageList(ret, FuzzyQueryResponse.Parser.ParseDelimitedFrom);;
 		}
     }
 }

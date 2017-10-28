@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using Comms;
 using Google.Protobuf;
 using NetMQ;
 using Shared;
@@ -25,6 +26,7 @@ namespace Comms
         public FuzzyMatcherClient(IServiceClient client)
         {
             this.client = client;
+            client.SetUnderlying(this);
         }
         public string Select(string foo)
         {
@@ -55,6 +57,7 @@ namespace Comms
         public _NAME_Client(IServiceClient client)
         {
             this.client = client;
+            this.client.SetUnderlying(this);
         }
 
         _FUNCTIONS_
@@ -111,7 +114,16 @@ namespace Comms
         String GenerateSignature(MethodInfo method)
         {
             var access = "public";
-            var ret = method.ReturnType.Name;
+            var ret = "";
+            if (typeof(IList).IsAssignableFrom(method.ReturnType))
+            {
+                ret = $"List<{method.ReturnType.GenericTypeArguments[0].Name}>";
+            }
+            else
+            {
+                ret = method.ReturnType.Name;
+
+            }
             var name = method.Name;
             var parameters = method.GetParameters().Select(GenerateSignatureParameter)
                 .Select(x => x.Item1 + " " + x.Item2).Aggregate("", (x, y) => x + y + ",");
@@ -167,6 +179,27 @@ namespace Comms
             else if (returnType == typeof(Boolean))
             {
                 return $"ret.First.ConvertToInt32() >0 ? true:false";
+            }
+            else if (typeof(IList).IsAssignableFrom(returnType))
+            {
+                if (typeof(IMessage).IsAssignableFrom(returnType.GenericTypeArguments[0]))
+                {
+                    return
+                        $"Helpers.UnpackMessageList(ret, {returnType.GenericTypeArguments[0].Name}.Parser.ParseDelimitedFrom);";
+                }
+                else if (returnType.GenericTypeArguments[0] == typeof(String))
+                {
+                    return $"Helpers.UnpackMessageListString(ret);";
+                }
+                else if (returnType.GenericTypeArguments[0] == typeof(Int32))
+                {
+                    return $"Helpers.UnpackMessageListInt32(ret);";
+
+                }
+                else if (returnType.GenericTypeArguments[0] == typeof(Int64))
+                {
+                    return $"Helpers.UnpackMessageListInt64(ret);";
+                }
             }
             return "";
         }

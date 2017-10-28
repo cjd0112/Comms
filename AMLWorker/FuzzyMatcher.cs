@@ -1,9 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using Comms;
 using Logger;
 using Microsoft.Data.Sqlite;
@@ -12,13 +8,14 @@ namespace AMLWorker
 {
     public class FuzzyMatcher : FuzzyMatcherServer
     {
-        string FuzzyPhraseCreate = "create table FuzzyPhrase (phrase text,unique(phrase));";
-        string FuzzyTripleCreate = "create virtual table FuzzyTriple using fts4(triple);";
-        string FuzzyPhraseToDocument = "create table FuzzyPhraseToDocument (phraseid integer, documentid integer, primary key(phraseid,documentid), foreign key (phraseid) references FuzzyPhrase(phrase));";
+        string FuzzyPhraseCreate = "create table FuzzyPhrase (id integer primary key,phrase text,unique(phrase));";
+        string FuzzyTripleCreate = "create virtual table FuzzyTriple using fts4(triple,phrase,notindexed=phrase);";
+        string FuzzyPhraseToDocument = "create table FuzzyPhraseToDocument (phraseid integer, documentid integer, primary key(phraseid,documentid), foreign key (phraseid) references FuzzyPhrase(id));";
 
         private string connectionString;
         public FuzzyMatcher(IServiceServer server) : base(server)
         {
+            
             L.Trace(
                 $"Opened server with bucket {server.BucketId} and data dir - {server.GetConfigProperty("DataDirectory")}");
 
@@ -49,72 +46,109 @@ namespace AMLWorker
 
         public override bool AddEntry(List<FuzzyWordEntry> entries)
         {
+            try
+            {
+                using (var connection = newConnection())
+                {
+                    connection.Open();
+                    var txn = connection.BeginTransaction();
+
+                    foreach (var c in entries)
+                    {
+                        var existsCmd = connection.CreateCommand();
+                        existsCmd.CommandText = "select rowid from FuzzyPhrase where Phrase=($phrase)";
+
+                        existsCmd.Parameters.AddWithValue("$phrase", c.Phrase);
+                        var exists = existsCmd.ExecuteReader();
+                        if (exists.HasRows)
+                        {
+                            var insert1Cmd = connection.CreateCommand();
+                            insert1Cmd.Transaction = txn;
+                            insert1Cmd.CommandText =
+                                "insert into FuzzyPhraseToDocument (phraseid,documentid) values ($phraseid,$documentid);";
+
+                            exists.Read();
+                            var phraseid = exists.GetInt32(0);
+
+                            insert1Cmd.Parameters.AddWithValue("$phraseid", phraseid);
+                            insert1Cmd.Parameters.AddWithValue("$documentid", c.DocId);
+
+                            try
+                            {
+                                var res = insert1Cmd.ExecuteNonQuery();
+                                if (res != 1)
+                                    throw new Exception($"Could not update existing phrase - {c.Phrase}");
+                            }
+                            catch (SqliteException )
+                            {
+//                                L.Trace(e.Message);
+                            }
+                        }
+                        else
+                        {
+                            var insert3Cmd = connection.CreateCommand();
+                            insert3Cmd.Transaction = txn;
+                            insert3Cmd.CommandText =
+                                $@"insert into FuzzyPhrase (phrase) values ($phrase);
+                    insert into FuzzyPhraseToDocument (phraseid,documentid) values (last_insert_rowid(),$documentid);
+                    insert into FuzzyTriple (triple,phrase) values ($triple,$phrase);";
+
+                            insert3Cmd.Parameters.AddWithValue("$phrase", c.Phrase);
+                            insert3Cmd.Parameters.AddWithValue("$documentid", c.DocId);
+                            insert3Cmd.Parameters.AddWithValue("$triple", StringFunctions.CreateTriple(c.Phrase));
+
+                            var row = insert3Cmd.ExecuteNonQuery();
+                            if (row != 3)
+                                throw new Exception($"Could not insert row .. {c.Phrase}");
+                        }
+
+                    }
+
+                    txn.Commit();
+                    return true;
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return false;
+            }
+        }
+
+        public override List<FuzzyQueryResponse> FuzzyQuery(List<string> phrases)
+        {
+            var fqr = new List<FuzzyQueryResponse>();
             using (var connection = newConnection())
             {
-                var txn = connection.BeginTransaction();
+                connection.Open();
 
-                var existsCmd = connection.CreateCommand();
-                existsCmd.CommandText = "select rowid from FuzzyPhrase where Phrase=($phrase)";
-
-                var insert3Cmd = connection.CreateCommand();
-                insert3Cmd.Transaction = txn;
-                insert3Cmd.CommandText = 
-                    $@"insert into FuzzyPhrase (phrase) values ($phrase);
-                    insert into FuzzyTriple (triple) values ($triple);
-                    insert into FuzzyPhraseToDocument (phraseid,documentid) values (last_insert_rowid(),$documentid);";
-
-                var insert1Cmd = connection.CreateCommand();
-                insert1Cmd.Transaction = txn;
-                insert1Cmd.CommandText =
-                    "insert into FuzzyPhraseToDocument (phraseid,documentid) values ($phraseid,$documentid);";
-
-
-                foreach (var c in entries)
+                foreach (var phrase in phrases)
                 {
-                    existsCmd.Parameters.AddWithValue("$phrase", c.Phrase);
-                    var exists = existsCmd.ExecuteReader();
-                    if (exists.HasRows)
+                    using (var cmd = connection.CreateCommand())
                     {
-                        insert1Cmd.Parameters.AddWithValue("$phraseid", exists.GetInt32(0));
-                        insert1Cmd.Parameters.AddWithValue("$documentid", c.DocId);
+                        FuzzyQueryResponse fqr2 = new FuzzyQueryResponse();
+                        fqr2.Query = phrase;
+                        cmd.CommandText =
+                            $@"select docid,phrase,matchinfo(FuzzyTriple,""s"") from FuzzyTriple where triple MATCH '{StringFunctions.TripleQuery(phrase)}'";
+
+                        var p = cmd.ExecuteReader();
+                        int cnt = 0;
+
+                        while (p.Read())
+                        {
+                            var docid = (Int64) p.GetValue(0);
+                            var index_phrase = (string) p.GetValue(1);
+                            var matchinfo = p.GetValue(2) as byte[];
+                            var p2 = StringFunctions.LevensteinDistance(index_phrase, phrase);
+                            fqr2.Detail.Add(new FuzzyQueryResponseDetail{Candidate=index_phrase,Score=p2,PhraseId=docid});
+                            cnt++;
+                        }
+                        fqr.Add(fqr2);
                     }
-                    else
-                    {
-                        insert3Cmd.Parameters.AddWithValue("$phrase", c.Phrase);
-                        insert3Cmd.Parameters.AddWithValue("$documentid", c.DocId);
-                        insert3Cmd.Parameters.AddWithValue("$triple", CreateTriple(c.Phrase));
-
-                        var row = insert3Cmd.ExecuteNonQuery();
-                        if (row != 2)
-                            throw new Exception($"Could not insert row .. {c.Phrase}");
-                    }
-
-                }
-
-                txn.Commit();
-
-
-            }
-            return true;
-        }
-
-        String CreateTriple(String phrase)
-        {
-            StringBuilder b = new StringBuilder();
-            int tripleChars = 0;
-            for (int cnt = 0; cnt < phrase.Length; cnt++,tripleChars++)
-            {
-                char z = phrase[cnt];
-                if (z == ' ')
-                    z = '_';
-                b.Append(z);
-                if (tripleChars > 0 && tripleChars % 3 == 0)
-                {
-                    b.Append(' ');
-                    cnt--;
                 }
             }
-            return b.ToString();
+            return fqr;
         }
+
     }
 }

@@ -202,7 +202,7 @@ namespace MajordomoProtocol
             // a request has arrived process it
             var request = m_worker.ReceiveMultipartMessage ();
 
-            Log ($"[WORKER] received {request}");
+            Log ($"[WORKER] received {request.FrameCount} frameCount message");
 
             // make sure that we have no valid request yet!
             // if something goes wrong we'll return 'null'
