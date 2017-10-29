@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading.Tasks;
 using AmlClient.AS.Application;
 using Comms;
 using CsvHelper;
@@ -18,30 +20,21 @@ using StructureMap;
 
 namespace AmlClient
 {
-    public class Retail
-    {
-        public String Id { get; set; }
-        public String Name { get; set; }
-        public String CompanyName { get; set; }
-        public String Address1 { get; set; }
-        public String Address2 { get; set; }
-        public String Town { get; set; }
-        public String Country { get; set; }
-        public String PostCode { get; set; }
-        public String Telephone1 { get; set; }
-        public String Telephone2 { get; set; }
-        public String Email { get; set; }
-        public String WebAddress { get; set; }
-        public String TxnProfile { get; set; }
-
-    }
     class Program
     {
+        public class ClientWithBucket
+        {
+            [PrimaryKey]
+            public string ClientName { get; set; }
+            public int BucketCount { get; set; }
+        }
+
 
         static void Main(string[] args)
         {
             try
             {
+
                 var s2 = Stopwatch.StartNew();
                 for (int i = 0; i < 1000000; i++)
                 {
@@ -57,31 +50,76 @@ namespace AmlClient
                 c = new Container(reg);
                 reg.For<IContainer>().Use(c);
 
-                var clientFactory = new ClientFactory(c);                
 
-                var z = clientFactory.GetClient<IFuzzyMatcher>(0);
+                var databasePath = reg.DataDirectory;
 
-                if (false)
+                var db = new SQLiteConnection(databasePath+"\\client.mdb");
+
+                db.CreateTable<ClientWithBucket>();
+
+                bool clearBucketState = false;
+                if (clearBucketState)
                 {
-                    CsvReader rdr = new CsvReader(new StreamReader(@"C:\home\colin\as\input\Retail-Large.csv"));
-                    var records = rdr.GetRecords<Retail>();
-                    List<FuzzyWordEntry> fwe = new List<FuzzyWordEntry>();
-                    records.Take(100000)
-                        .Do(x => fwe.Add(new FuzzyWordEntry {DocId = Int32.Parse(x.Id), Phrase = x.Name}));
-                    z.AddEntry(fwe);
+                    db.Delete<ClientWithBucket>("IFuzzyMatcher");
+                }
+
+                var clientFactory = new ClientFactory(c);
+
+                var bucketMax = clientFactory.GetClientBuckets<IFuzzyMatcher>().Max();
+                var bucketMin = clientFactory.GetClientBuckets<IFuzzyMatcher>().Min();
+
+                if (bucketMin != 0)
+                    throw new Exception($"Minimum bucket is not zero it is - {bucketMin} - should be zero");
+
+                if (db.Find<ClientWithBucket>("IFuzzyMatcher") == null)
+                {
+                    db.Insert(new ClientWithBucket {BucketCount = bucketMax,ClientName= "IFuzzyMatcher"});
                 }
                 else
                 {
-                    var q = z.FuzzyQuery(new List<string>(new[]
-                        {"aleshia tomkiewicz", "daniel towers", "morna dick", "colin dick"}));
-
-                    foreach (var g in q)
+                    var ppp = db.Find < ClientWithBucket>("IFuzzyMatcher");
+                    if (ppp.BucketCount != bucketMax)
                     {
-                        Console.WriteLine(g.Query);
-                        foreach (var n in g.Detail)
+                        throw new Exception($"We have (dynamic) bucketMax for 'IFuzzyMatcher = {bucketMax} - but last recorded run bucketMax was - {ppp.BucketCount}... cannot continue - need to match bucketCount - or rebuild");
+                    }
+                }
+
+                var multiplexer = new Multiplexer<FuzzyWordEntry>(bucketMax+1 /*number of buckets*/);
+
+                CsvReader rdr = new CsvReader(new StreamReader(@"C:\home\colin\as\input\Retail-Large.csv"));
+                var records = rdr.GetRecords<Retail>();
+                records.Take(100000)
+                    .Do(x => multiplexer.Add(x.Name,new FuzzyWordEntry { DocId = Int32.Parse(x.Id), Phrase = x.Name }));
+
+                List<Task> tasks = new List<Task>();
+                multiplexer.GetBuckets().Do(x =>
+                {
+                    tasks.Add(new Task(()=>clientFactory.GetClient<IFuzzyMatcher>(x.Item1).AddEntry(x.Item2)));
+                    tasks.Last().Start();
+                });
+
+                Task.WaitAll(tasks.ToArray());
+
+                foreach (var bucket in clientFactory.GetClientBuckets<IFuzzyMatcher>())
+                {
+                    var z = clientFactory.GetClient<IFuzzyMatcher>(bucket);
+
+                    if (false)
+                    {
+                    }
+                    else
+                    {
+                        var q = z.FuzzyQuery(new List<string>(new[]
+                            {"aleshia tomkiewicz", "daniel towers", "morna dick", "colin dick"}));
+
+                        foreach (var g in q)
                         {
-                            Console.WriteLine($"            {n.Candidate} - {n.Score} - {n.PhraseId}");
-                            
+                            Console.WriteLine(g.Query);
+                            foreach (var n in g.Detail)
+                            {
+                                Console.WriteLine($"            {n.Candidate} - {n.Score} - {n.PhraseId}");
+
+                            }
                         }
                     }
                 }

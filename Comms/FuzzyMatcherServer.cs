@@ -9,7 +9,7 @@ namespace Comms
 {
     public abstract class FuzzyMatcherServer : IFuzzyMatcher
     {
-        private IServiceServer server;
+        protected IServiceServer server;
         protected FuzzyMatcherServer(IServiceServer server)
         {
             this.server= server;

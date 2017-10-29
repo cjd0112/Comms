@@ -47,7 +47,7 @@ namespace AmlClient
         {
             var str = typeof(T).Name + "_" + bucket;
             if (serviceQueue.ContainsKey(str) == false)
-                throw new Exception($"Service with name - {str}");
+                throw new Exception($"Service with name - {str} not found");
 
             var serviceClient = serviceQueue[str];
 
@@ -55,6 +55,15 @@ namespace AmlClient
                 throw new Exception($"Underlying for service - {str} is null ...");
 
             return (T) serviceClient.Underlying;
+        }
+
+        public IEnumerable<int> GetClientBuckets<T>() where T : ICommsContract
+        {
+            foreach (var c in serviceQueue.Keys)
+            {
+                if (c.StartsWith(typeof(T).Name))
+                    yield return serviceQueue[c].Bucket;
+            }
         }
 
         private void Z_LogInfoReady(object sender, MDPCommons.MDPLogEventArgs e)
@@ -89,10 +98,13 @@ namespace AmlClient
                 try
                 {
                     L.Trace($"Loading service- {c}");
+
                     if (c.IndexOf("_") == -1)
                         throw new Exception("Expected '_' in service name");
 
                     var interfaceName = c.Substring(0, c.IndexOf("_"));
+
+                    var bucket = Convert.ToInt32(c.Substring(c.IndexOf("_")+1));
 
                     L.Trace($"Extracted interface name - {interfaceName}");
 
@@ -120,7 +132,10 @@ namespace AmlClient
                     if (clientType == null)
                         throw new Exception($"Couldn't create client type with name - {str}");
 
-                    var serviceClient = container.With(typeof(string), c).With(typeof(IClientProxy), this).GetInstance<ServiceClient>();
+                    var serviceClient = container.
+                        With(typeof(string), c).
+                        With(typeof(int),bucket).
+                        With(typeof(IClientProxy), this).GetInstance<ServiceClient>();
 
                     if (serviceClient == null)
                         throw new Exception($"Couldn't create service client");

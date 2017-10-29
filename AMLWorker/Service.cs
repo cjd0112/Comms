@@ -39,7 +39,7 @@ namespace AMLWorker
                     // send the reply and wait for a request
                     var request = g.Receive(reply);
 
-                    Console.WriteLine($"Received: {request}");
+                    Console.WriteLine($"Received a request");
 
                     // was the worker interrupted
                     if (ReferenceEquals(request, null))

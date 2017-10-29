@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Comms;
 using Logger;
 using Microsoft.Data.Sqlite;
+using Shared;
 
 namespace AMLWorker
 {
@@ -30,7 +31,7 @@ namespace AMLWorker
                 if (!SqlHelper.TableExists(connection,"FuzzyPhrase"))
                 {
                     SqlHelper.ExecuteCommandLog(connection, FuzzyPhraseCreate);
-                    SqlHelper.ExecuteCommandLog(connection,FuzzyTripleCreate);
+                    SqlHelper.ExecuteCommandLog(connection, FuzzyTripleCreate);
                     SqlHelper.ExecuteCommandLog(connection, FuzzyPhraseToDocument);
 
                 }
@@ -48,6 +49,7 @@ namespace AMLWorker
         {
             try
             {
+                L.Trace($"FuzzyMatcher - {this.server.BucketId} - hit add entry with {entries.Count} at {DateTime.Now}");
                 using (var connection = newConnection())
                 {
                     connection.Open();

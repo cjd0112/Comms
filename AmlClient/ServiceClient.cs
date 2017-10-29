@@ -17,10 +17,13 @@ namespace AmlClient
 
         public ICommsContract Underlying;
 
-        public ServiceClient(string serviceName,IClientProxy proxy)
+        public int Bucket { get; set; }
+
+        public ServiceClient(int bucket,string serviceName,IClientProxy proxy)
         {
             this.proxy = proxy;
             this.serviceName = serviceName;
+            this.Bucket = bucket;
         }
 
         public void SetUnderlying(ICommsContract contract)

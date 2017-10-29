@@ -21,6 +21,7 @@ namespace AmlClient
         }
         public class MyRegistry : Registry
         {
+            public String DataDirectory { get; set; }
             public MyRegistry(string jsonFile)
             {
                 Console.WriteLine($"Opening configuration file - {jsonFile}");
@@ -41,6 +42,8 @@ namespace AmlClient
                 For<IServiceClient>().Add<ServiceClient>();
 
                 For<IClientProxy>().Add<ClientFactory>();
+
+                DataDirectory = config["DataDirectory"];
 
                 Scan(x =>
                 {

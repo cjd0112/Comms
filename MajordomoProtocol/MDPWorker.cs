@@ -53,8 +53,8 @@ namespace MajordomoProtocol
         /// </summary>
         private MDPWorker ()
         {
-            HeartbeatDelay = TimeSpan.FromMilliseconds (2500);
-            ReconnectDelay = TimeSpan.FromMilliseconds (2500);
+            HeartbeatDelay = TimeSpan.FromMilliseconds (1000);
+            ReconnectDelay = TimeSpan.FromMilliseconds (1000);
             m_exit = false;
             m_connected = false;
         }
@@ -270,7 +270,7 @@ namespace MajordomoProtocol
 
             var command = (MDPCommand) cmd.Buffer[0];
 
-            Log ($"[WORKER] received {request}/{command}");
+            Log ($"[WORKER] received a {command}");
 
             return command;
         }
