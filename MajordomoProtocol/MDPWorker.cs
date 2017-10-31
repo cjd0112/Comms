@@ -202,7 +202,7 @@ namespace MajordomoProtocol
             // a request has arrived process it
             var request = m_worker.ReceiveMultipartMessage ();
 
-            Log ($"[WORKER] received {request.FrameCount} frameCount message");
+//            Log ($"[WORKER] received {request.FrameCount} frameCount message");
 
             // make sure that we have no valid request yet!
             // if something goes wrong we'll return 'null'
@@ -270,7 +270,7 @@ namespace MajordomoProtocol
 
             var command = (MDPCommand) cmd.Buffer[0];
 
-            Log ($"[WORKER] received a {command}");
+//            Log ($"[WORKER] received a {command}");
 
             return command;
         }
@@ -335,7 +335,7 @@ namespace MajordomoProtocol
             // set MDP empty frame as separator
             msg.Push (NetMQFrame.Empty);                // [e][command][header][data]
 
-            Log ($"[WORKER] sending {msg} to broker / Command {mdpCommand}");
+            //Log ($"[WORKER] sending msg to broker / Command {mdpCommand}");
 
             m_worker.SendMultipartMessage (msg);
         }

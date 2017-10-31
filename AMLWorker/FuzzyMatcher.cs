@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Comms;
 using Logger;
 using Microsoft.Data.Sqlite;
@@ -49,6 +50,8 @@ namespace AMLWorker
         {
             try
             {
+                var s = new Stopwatch();
+                s.Start();
                 L.Trace($"FuzzyMatcher - {this.server.BucketId} - hit add entry with {entries.Count} at {DateTime.Now}");
                 using (var connection = newConnection())
                 {
@@ -107,6 +110,8 @@ namespace AMLWorker
                     }
 
                     txn.Commit();
+                    s.Stop();
+                    L.Trace($"Committed from FuzzyMatcher - {server.BucketId} @ {DateTime.Now} - op took - {s.ElapsedMilliseconds}ms");
                     return true;
                 }
             }
